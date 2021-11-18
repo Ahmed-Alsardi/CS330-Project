@@ -3,7 +3,8 @@ import socket
 
 from shared.constants import (SERVER_PORT, SERVER_ADDRESS,
                               HEADER_SIZE, ENCODE_FORMAT,
-                              calculate_message_length, DISCONNECT, REGULAR_MODE, SECRET_MODE)
+                              DISCONNECT, REGULAR_MODE, SECRET_MODE)
+from shared.utils import calculate_message_length, encrypt_message, decrypt_message
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s %(message)s', datefmt='%H:%M:%S')
 
@@ -39,6 +40,9 @@ class Client:
 
     def _send_message(self, message) -> str:
         # TODO: Check for mode before sending
+        if self.sending_mode == SECRET_MODE:
+            message = encrypt_message(message).decode(encoding=ENCODE_FORMAT)
+            print(f"sending encrypted message: {message}")
         message_length = calculate_message_length(message)
         self.client_connection.send(message_length)
         self.client_connection.send(message.encode(encoding=ENCODE_FORMAT))
@@ -48,18 +52,21 @@ class Client:
         message_length = self.client_connection.recv(HEADER_SIZE)
         message_length = int(message_length)
         message = self.client_connection.recv(message_length).decode(encoding=ENCODE_FORMAT)
+        if self.sending_mode == SECRET_MODE:
+            print(f"received encrypted message: {message}")
+            message = decrypt_message(message.encode(encoding=ENCODE_FORMAT))
         return message
 
     def _handle_mode(self, message) -> bool:
         if message.upper() == REGULAR_MODE and self.sending_mode != REGULAR_MODE:
-            self.sending_mode = REGULAR_MODE
             # Change the mode in the server to
             self._send_message(REGULAR_MODE)
+            self.sending_mode = REGULAR_MODE
             logging.info(f"CHANGE MODE]: change to {REGULAR_MODE}")
             return True
         elif message.upper() == SECRET_MODE and self.sending_mode != SECRET_MODE:
-            self.sending_mode = SECRET_MODE
             self._send_message(SECRET_MODE)
+            self.sending_mode = SECRET_MODE
             logging.info(f"CHANGE MODE]: change to {SECRET_MODE}")
             return True
         return False

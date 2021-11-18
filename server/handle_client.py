@@ -1,7 +1,8 @@
 import logging
 import socket
 
-from shared.constants import calculate_message_length, ENCODE_FORMAT, HEADER_SIZE, DISCONNECT, REGULAR_MODE, SECRET_MODE
+from shared.constants import ENCODE_FORMAT, HEADER_SIZE, DISCONNECT, REGULAR_MODE, SECRET_MODE
+from shared.utils import calculate_message_length, decrypt_message, encrypt_message
 
 
 class HandleClient:
@@ -30,10 +31,16 @@ class HandleClient:
         message_length = self.socket_connection.recv(HEADER_SIZE).decode(encoding=ENCODE_FORMAT)
         message_length = int(message_length)
         message = self.socket_connection.recv(message_length).decode(encoding=ENCODE_FORMAT)
+        if self.sending_mode == SECRET_MODE:
+            print(f"received encrypted message: {message}")
+            message = decrypt_message(message.encode(encoding=ENCODE_FORMAT))
         return message
 
     def _send_message(self, message: str):
         # TODO: check for mode before sending
+        if self.sending_mode == SECRET_MODE:
+            message = encrypt_message(message).decode(encoding=ENCODE_FORMAT)
+            print(f"sending encrypted message: {message}")
         message_length = calculate_message_length(message)
         self.socket_connection.send(message_length)
         self.socket_connection.send(message.encode(encoding=ENCODE_FORMAT))
@@ -48,6 +55,7 @@ class HandleClient:
             logging.info(f"CHANGE MODE]: change to {SECRET_MODE}")
             return True
         return False
+
 
 def handle_client(client_socket, client_address):
     client = HandleClient(client_socket=client_socket, address=client_address)
