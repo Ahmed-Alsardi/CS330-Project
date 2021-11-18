@@ -21,13 +21,25 @@ class Client:
     def run(self):
         running = True
         while running:
-            input_message = input("Enter your message here: ")
-            message_length = calculate_message_length(input_message)
-            self.client_connection.send(message_length)
-            self.client_connection.send(input_message.encode(encoding=ENCODE_FORMAT))
+            input_message = self._seng_message()
             if input_message == DISCONNECT:
                 running = False
+            message = self._received_message()
+            logging.info(f"RECEIVED]: Received message from server: {message}")
         self.client_connection.close()
+
+    def _seng_message(self) -> str:
+        input_message = input("Enter your message here: ")
+        message_length = calculate_message_length(input_message)
+        self.client_connection.send(message_length)
+        self.client_connection.send(input_message.encode(encoding=ENCODE_FORMAT))
+        return input_message
+
+    def _received_message(self) -> str:
+        message_length = self.client_connection.recv(HEADER_SIZE)
+        message_length = int(message_length)
+        message = self.client_connection.recv(message_length).decode(encoding=ENCODE_FORMAT)
+        return message
 
 
 if __name__ == '__main__':
