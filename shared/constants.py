@@ -2,7 +2,9 @@ SERVER_ADDRESS = "localhost"
 SERVER_PORT = 5000
 HEADER_SIZE = 64
 ENCODE_FORMAT = "utf-8"
-DISCONNECT = "DISCONNECT!"
+DISCONNECT = "DISCONNECT"
+REGULAR_MODE = "REGULAR MODE"
+SECRET_MODE = "SECRET MODE"
 
 
 def calculate_message_length(message: str) -> bytes:

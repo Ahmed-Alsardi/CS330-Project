@@ -1,23 +1,24 @@
 import logging
 import socket
 
-from shared.constants import calculate_message_length, ENCODE_FORMAT, HEADER_SIZE, DISCONNECT
+from shared.constants import calculate_message_length, ENCODE_FORMAT, HEADER_SIZE, DISCONNECT, REGULAR_MODE, SECRET_MODE
 
 
 class HandleClient:
-    def __init__(self, client_socket: socket.socket, address):
+    def __init__(self, client_socket: socket.socket, address, sending_mode: str = REGULAR_MODE):
         self.socket_connection = client_socket
         self.address = address
-        welcome_message = "WELCOME TO THE SERVER"
-        message_length = calculate_message_length(welcome_message)
-        self.socket_connection.send(message_length)
-        self.socket_connection.send(welcome_message.encode(encoding=ENCODE_FORMAT))
+        self.sending_mode = sending_mode
+        self._send_message("Welcome to the Server")
         logging.info(f"SENDING]: welcome message to {self.address}")
 
     def run(self):
         running = True
         while running:
             message = self._received_message()
+            is_changed = self._handle_mode(message)
+            if is_changed:
+                continue
             if message == DISCONNECT:
                 running = False
             # return the same message all upper case for now
@@ -32,10 +33,21 @@ class HandleClient:
         return message
 
     def _send_message(self, message: str):
+        # TODO: check for mode before sending
         message_length = calculate_message_length(message)
         self.socket_connection.send(message_length)
         self.socket_connection.send(message.encode(encoding=ENCODE_FORMAT))
 
+    def _handle_mode(self, message) -> bool:
+        if message.upper() == REGULAR_MODE and self.sending_mode != REGULAR_MODE:
+            self.sending_mode = REGULAR_MODE
+            logging.info(f"CHANGE MODE]: change to {REGULAR_MODE}")
+            return True
+        elif message.upper() == SECRET_MODE and self.sending_mode != SECRET_MODE:
+            self.sending_mode = SECRET_MODE
+            logging.info(f"CHANGE MODE]: change to {SECRET_MODE}")
+            return True
+        return False
 
 def handle_client(client_socket, client_address):
     client = HandleClient(client_socket=client_socket, address=client_address)
