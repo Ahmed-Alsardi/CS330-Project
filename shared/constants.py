@@ -1,9 +1,7 @@
-SERVER_ADDRESS = "localhost"
-SERVER_PORT = 5000
+SERVER_ADDRESS = "192.168.43.210"
+SERVER_PORT = 8000
 HEADER_SIZE = 64
 ENCODE_FORMAT = "utf-8"
-
-
-def calculate_message_length(message: str) -> bytes:
-    message_length = f"{len(message):<{HEADER_SIZE}}"
-    return message_length.encode(encoding=ENCODE_FORMAT)
+DISCONNECT = "3"
+REGULAR_MODE = "1"
+SECRET_MODE = "2"
