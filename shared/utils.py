@@ -6,6 +6,12 @@ SECRET_KEY = "t8JbqtzCBh5df56RPD0XfvStnoc5pAZSKjt6ONPDI78="
 
 
 def calculate_message_length(message: str) -> bytes:
+    """
+    Calculate the length, by getting the number of character in the message,
+    then add an empty space to fill the segment
+    :param message: string
+    :return: bytes
+    """
     message_length = f"{len(message):<{HEADER_SIZE}}"
     return message_length.encode(encoding=ENCODE_FORMAT)
 
